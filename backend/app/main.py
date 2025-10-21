@@ -1,31 +1,19 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import ORJSONResponse
-from .settings import settings
-from .routers import auth, me, transactions, subcategories, allocation_models
+from typing import Annotated
+from datetime import datetime
 
+from fastapi import FastAPI, Depends, HTTPException, status
 
-app = FastAPI(title="Budget Backend", default_response_class=ORJSONResponse)
+from app.models import Users, Bank
+from app.utils import get_user, db_insert, get_password_hash
 
+from app.routers.auth import AuthRouter
+from app.routers.user import UserRouter
 
-origins = [o.strip() for o in (settings.cors_origins or []) if o]
-if origins:
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=origins,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-        )
+app = FastAPI()
 
+@app.get('/')
+async def hello_world():
+    return {"message": "Hello World"}
 
-@app.get("/")
-def root():
-    return {"ok": True, "name": "budget-backend"}
-
-
-app.include_router(auth.router)
-app.include_router(me.router)
-app.include_router(transactions.router)
-app.include_router(subcategories.router)
-#app.include_router(allocation_models.router)
+app.include_router(AuthRouter)
+app.include_router(UserRouter)
